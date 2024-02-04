@@ -10,8 +10,8 @@ It is a single binary without the need for a static asset directory. Build and s
 certbot certonly
 cargo install --path .
 # Allow non-sudo binaries to listen on low ports:
-sudo setcap 'cap_net_bind_service=+ep' $(which mentor)
-mentor --endpoint 0.0.0.0 --port 443 --cert mycert.pem --key mykey.pem
+sudo setcap 'cap_net_bind_service=+ep' $(which polkadot-mentor-issues)
+polkadot-mentor-issues --endpoint 0.0.0.0 --port 443 --cert mycert.pem --key mykey.pem
 ```
 
 # Columns

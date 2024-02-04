@@ -1,6 +1,6 @@
 
 [package]
-name = "mentor"
+name = "polkadot-mentor-issues"
 version = "0.1.1"
 edition = "2021"
 

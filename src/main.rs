@@ -1,7 +1,6 @@
 #![allow(dead_code)] // The caching crate produces "unused" functions…
 #![allow(unused_imports)]
 
-use sailfish::TemplateOnce;
 use actix_files as fs;
 use actix_web::{
 	get,
@@ -15,6 +14,7 @@ use actix_web::{
 use clap::Parser;
 use core::time::Duration;
 use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
+use sailfish::TemplateOnce;
 use std::{
 	collections::{BTreeMap, BTreeSet},
 	path::{Path, PathBuf},
@@ -75,14 +75,14 @@ async fn main() -> std::io::Result<()> {
 	// Use this single-threaded runtime for spawning since out state is not `Send`.
 	actix_web::rt::spawn(async move {
 		let mut interval = tokio::time::interval(Duration::from_secs(60 * 60 * 3)); // 6 hrs
-		// first one is free
+																			// first one is free
 		interval.tick().await;
 
 		let issues = github::Issues::load().await.unwrap();
 		d2.write().unwrap().issues = issues;
-		
+
 		loop {
-			interval.tick().await;	
+			interval.tick().await;
 
 			let issues = github::Issues::fetch().await.unwrap();
 			d2.write().unwrap().issues = issues;
@@ -105,20 +105,14 @@ async fn main() -> std::io::Result<()> {
 
 #[get("/")]
 async fn index(data: Data<RwLock<State>>) -> impl Responder {
-	http_200(
-		html::Issues::from_issues(&data.read().unwrap().issues)
-			.render_once()
-			.unwrap(),
-	)
+	http_200(html::Issues::from_issues(&data.read().unwrap().issues).render_once().unwrap())
 }
 
 #[get("/static/twitter.png")]
 async fn twitter() -> impl Responder {
 	let img = include_bytes!("../static/twitter.png");
-	
-	HttpResponse::Ok()
-		.content_type("image/png")
-		.body(&img[..])
+
+	HttpResponse::Ok().content_type("image/png").body(&img[..])
 }
 
 #[get("/version")]

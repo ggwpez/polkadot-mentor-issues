@@ -1,13 +1,11 @@
 use core::time::Duration;
-use std::time::Instant;
-use serde::{Serialize, Deserialize};
+use octocrab::models::IssueId;
+use serde::{Deserialize, Serialize};
 use std::{
 	collections::BTreeMap,
 	io::{Read, Write},
+	time::{Instant, SystemTime, UNIX_EPOCH},
 };
-use std::time::SystemTime;
-use std::time::UNIX_EPOCH;
-use octocrab::models::IssueId;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Issue(octocrab::models::issues::Issue);
@@ -223,7 +221,8 @@ impl Human for IssueType {
 			Self::Feature => "Feature",
 			Self::Docs => "Docs",
 			Self::Benchmarking => "Benchmarking",
-		}.to_string()
+		}
+		.to_string()
 	}
 }
 
@@ -258,7 +257,8 @@ impl Human for Status {
 			Self::Free => "Free",
 			Self::Taken => "Taken",
 			Self::WIP => "WIP",
-		}.to_string()
+		}
+		.to_string()
 	}
 }
 
@@ -270,7 +270,6 @@ impl Colored for Status {
 		}
 	}
 }
-
 
 impl<T: Human> Human for Option<T> {
 	fn human(&self) -> String {
@@ -313,7 +312,8 @@ impl Human for Difficulty {
 			Self::Medium => "Easy",
 			Self::Difficult => "Difficult",
 			Self::Involved => "Hard",
-		}.to_string()
+		}
+		.to_string()
 	}
 }
 
@@ -345,16 +345,13 @@ type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
 impl Issues {
 	fn now() -> Self {
-		Self {
-			last_updated: Some(now_s()),
-			..Default::default()
-		}
+		Self { last_updated: Some(now_s()), ..Default::default() }
 	}
 
 	pub fn since_last_update(&self) -> Option<Duration> {
 		let Some(last_updated) = self.last_updated else { return None };
 		let now = now_s();
-		
+
 		Some(Duration::from_secs(now - last_updated))
 	}
 
@@ -409,10 +406,10 @@ impl Issues {
 	async fn fetch_issues(&mut self) -> Result<()> {
 		log::info!("Fetching github issues...");
 		let mut interval = tokio::time::interval(Duration::from_millis(2000));
-		
+
 		interval.tick().await;
 		let octocrab = octocrab::instance();
-		
+
 		let mut page = octocrab
 			.issues("paritytech", "polkadot-sdk")
 			.list()
@@ -429,10 +426,7 @@ impl Issues {
 			}
 			interval.tick().await;
 
-			page = match octocrab
-				.get_page::<octocrab::models::issues::Issue>(&page.next)
-				.await?
-			{
+			page = match octocrab.get_page::<octocrab::models::issues::Issue>(&page.next).await? {
 				Some(next_page) => next_page,
 				None => break,
 			}
@@ -444,9 +438,7 @@ impl Issues {
 
 fn now_s() -> u64 {
 	let start = SystemTime::now();
-	let since_the_epoch = start
-		.duration_since(UNIX_EPOCH)
-		.expect("Time went backwards");
+	let since_the_epoch = start.duration_since(UNIX_EPOCH).expect("Time went backwards");
 
 	since_the_epoch.as_secs()
 }
