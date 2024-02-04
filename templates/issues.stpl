@@ -1,0 +1,81 @@
+<% use crate::github::*; %>
+
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+  <head>
+    <% include!("./header.stpl"); %>
+ 
+  <script>
+    <% include!("./main.js"); %>
+  </script>
+
+  </head>
+  <body class="container">
+  
+  <div class="container">
+    <div class="row justify-content-end p-2">
+      <div class="col-4 d-flex justify-content-start" style="padding-left: 0px; padding-top: 0.6em; padding-bottom: 0.6em;">
+        <!-- Last updated -->
+        Updated <%= issues.since_last_update().human() %> ago
+      </div>
+
+      <div class="col-4 d-flex justify-content-center" style="padding-top: 0.6em; padding-bottom: 0.6em;">
+        <a href="https://github.com/ggwpez/polkadot-mentor-issues" target="_blank">
+          <div class="highlight_link">POLKADOT-SDK MENTOR ISSUES</div>
+        </a>
+      </div>
+      
+      <div class="col-4 d-flex justify-content-end" style="padding-right: 0px">
+        <!-- Source link -->
+        <button class="astext" id="switch" class="astext checked">💡</button>
+      </div>
+    </div>
+  </div>
+  
+  <hr style="margin-bottom: 0.75em; margin-top: 0em;">
+
+  <table id="myTable" class="display nowrap" style="width:100%" width="100%">
+    <thead>
+      <tr>
+        <th>Title (<%= issues.issues.len() %>)</th>
+        <th>Difficulty</th>
+        <th>Status</th>
+        <th>Type</th>
+        <th>Author</th>
+      </tr>
+    </thead>
+    <tbody>
+    <% for issue in issues.issues.values() { %>
+      <tr>
+        <!-- TITLE -->
+        <td data-order='<%- issue.title().remove_non_alphanum() %>'>
+          <a href="<%- issue.link() %>" target="_blank">
+            <%= issue.title().sanitize().shortened() %>
+          </a>
+        </td>
+
+        <!-- DIFFICULTY -->
+        <td data-order='<%- issue.difficulty().order() %>'>
+          <%- issue.difficulty().colored_human() %>
+        </td>
+        
+        <!-- STATUS -->
+        <td data-order='<%- issue.status().order() %>'>
+          <%- issue.status().colored_human() %>
+        </td>
+
+        <!-- TYPE -->
+        <td data-order='<%- issue.typ().order() %>'>
+          <%- issue.typ().colored_human() %>
+        </td>
+        
+        <!-- CREATOR -->
+         <td data-order='<%- issue.creator() %>'>
+          <%- issue.creator() %>
+        </td>
+      </tr>
+    <% } %>
+    </tbody>
+  </table>
+</body>
+</html>
