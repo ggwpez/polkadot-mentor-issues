@@ -1,4 +1,4 @@
-<% use crate::github::*; %>
+<% use crate::traits::*; %>
 
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="dark">
@@ -49,7 +49,7 @@
       <tr>
         <!-- TITLE -->
         <td data-order='<%- issue.title().remove_non_alphanum() %>'>
-          <a href="<%- issue.link() %>" target="_blank">
+          <a href="<%- issue.url() %>" target="_blank">
             <%= issue.title().sanitize().shortened() %>
           </a>
         </td>

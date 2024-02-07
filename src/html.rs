@@ -13,12 +13,6 @@ impl<'a> Issues<'a> {
 	}
 }
 
-pub(crate) fn http_500(msg: String) -> HttpResponse {
-	HttpResponse::InternalServerError()
-		.content_type("text/html; charset=utf-8")
-		.body(msg)
-}
-
 pub(crate) fn http_200<T>(msg: T) -> HttpResponse
 where
 	String: std::convert::From<T>,

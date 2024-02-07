@@ -24,7 +24,8 @@ use std::{
 
 mod github;
 mod html;
-use html::*;
+mod traits;
+mod types;
 
 #[derive(Debug, Parser, Clone)]
 #[clap(author)]
@@ -34,14 +35,6 @@ pub(crate) struct MainCmd {
 
 	#[clap(long, short, default_value = "8080")]
 	pub port: u16,
-
-	/// PEM format cert.
-	#[clap(long, requires("key"))]
-	pub cert: Option<String>,
-
-	/// PEM format key.
-	#[clap(long, requires("cert"))]
-	pub key: Option<String>,
 }
 
 #[derive(Default)]
@@ -89,23 +82,13 @@ async fn main() -> std::io::Result<()> {
 		}
 	});
 
-	let bound_server = if let Some(cert) = cmd.cert {
-		let mut builder = SslAcceptor::mozilla_intermediate(SslMethod::tls()).unwrap();
-		builder
-			.set_private_key_file(cmd.key.expect("Checked by clap"), SslFiletype::PEM)
-			.unwrap();
-		builder.set_certificate_chain_file(cert).unwrap();
-		server.bind_openssl(endpoint, builder)
-	} else {
-		server.bind(endpoint)
-	};
-
-	bound_server?.run().await
+	let bound_server = server.bind(endpoint)?;
+	bound_server.run().await
 }
 
 #[get("/")]
 async fn index(data: Data<RwLock<State>>) -> impl Responder {
-	http_200(html::Issues::from_issues(&data.read().unwrap().issues).render_once().unwrap())
+	html::http_200(html::Issues::from_issues(&data.read().unwrap().issues).render_once().unwrap())
 }
 
 #[get("/static/twitter.png")]
@@ -117,5 +100,5 @@ async fn twitter() -> impl Responder {
 
 #[get("/version")]
 async fn version() -> impl Responder {
-	http_200(env!("CARGO_PKG_VERSION"))
+	html::http_200(env!("CARGO_PKG_VERSION"))
 }

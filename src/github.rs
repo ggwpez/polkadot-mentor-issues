@@ -6,7 +6,11 @@ use std::{
 	io::{Read, Write},
 	time::{Instant, SystemTime, UNIX_EPOCH},
 };
+use crate::types::*;
 
+const CACHE_PATH: &str = "data.json";
+
+/// A single github issue.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Issue(octocrab::models::issues::Issue);
 
@@ -30,15 +34,11 @@ impl PartialOrd for Issue {
 }
 
 impl Issue {
-	pub fn name(&self) -> Option<String> {
-		Some(self.0.title.clone())
-	}
-
 	pub fn title(&self) -> String {
 		self.0.title.clone()
 	}
 
-	pub fn link(&self) -> String {
+	pub fn url(&self) -> String {
 		self.0.html_url.as_str().to_string()
 	}
 
@@ -46,10 +46,15 @@ impl Issue {
 		self.0.user.login.clone()
 	}
 
+	pub fn difficulty(&self) -> Option<Difficulty> {
+		self.0.labels.iter().find_map(|label| {
+			label.name.as_str().try_into().ok()
+		})
+	}
+
 	pub fn typ(&self) -> Option<IssueType> {
 		self.0.labels.iter().find_map(|label| {
-			let label = label.name.as_str();
-			IssueType::try_from_label(label).ok()
+			label.name.as_str().try_into().ok()
 		})
 	}
 
@@ -65,264 +70,15 @@ impl Issue {
 			Some(Status::Free)
 		}
 	}
-
-	pub fn difficulty(&self) -> Option<Difficulty> {
-		self.0.labels.iter().find_map(|label| {
-			let label = label.name.as_str();
-			Difficulty::try_from_label(label).ok()
-		})
-	}
 }
 
-pub trait Order {
-	fn order(&self) -> u64;
-}
-
-impl<T: Order> Order for Option<T> {
-	fn order(&self) -> u64 {
-		self.as_ref().map_or(9999, |d| d.order())
-	}
-}
-
-pub trait Human {
-	fn human(&self) -> String;
-}
-
-pub trait Colored {
-	fn color(&self) -> &str;
-}
-
-pub enum Difficulty {
-	Easy,
-	Medium,
-	Difficult,
-	Involved,
-}
-
-impl Order for Difficulty {
-	fn order(&self) -> u64 {
-		match self {
-			Self::Easy => 0,
-			Self::Medium => 1,
-			Self::Difficult => 2,
-			Self::Involved => 3,
-		}
-	}
-}
-
-impl Colored for Difficulty {
-	fn color(&self) -> &str {
-		match self {
-			Self::Easy => "green",
-			Self::Medium => "orange",
-			Self::Difficult => "yellow",
-			Self::Involved => "red",
-		}
-	}
-}
-
-pub trait RemoveNonAlphaNum {
-	fn remove_non_alphanum(&self) -> String;
-}
-
-impl RemoveNonAlphaNum for String {
-	fn remove_non_alphanum(&self) -> String {
-		self.chars().filter(|c| c.is_alphanumeric()).collect()
-	}
-}
-
-pub trait Sanitize {
-	fn sanitize(&self) -> String;
-}
-
-impl Sanitize for String {
-	fn sanitize(&self) -> String {
-		self.replace(['\'', '`', '\"'], "")
-	}
-}
-
-pub trait Shortened {
-	fn shortened(&self) -> String;
-}
-
-impl Shortened for String {
-	fn shortened(&self) -> String {
-		if self.len() > 50 {
-			format!("{}...", &self[..50])
-		} else {
-			self.clone()
-		}
-	}
-}
-
-pub enum IssueType {
-	Bug,
-	Tests,
-	Cleanup,
-	Refactor,
-	Feature,
-	Docs,
-	Benchmarking,
-}
-
-impl IssueType {
-	pub fn try_from_label(label: &str) -> Result<Self> {
-		match label {
-			"I0-panic" | "I1-security" | "I2-bug" | "I3-annoyance" => Ok(Self::Bug),
-			"I4-refactor" | "I9-optimisation" => Ok(Self::Refactor),
-			"I5-enhancement" => Ok(Self::Feature),
-			// best effort since we have no clue what it is:
-			"T10-tests" => Ok(Self::Tests),
-			"T13-deprecation" | "T14-cleanup" => Ok(Self::Cleanup),
-			"T11-documentation" => Ok(Self::Docs),
-			"T12-benchmarks" => Ok(Self::Benchmarking),
-			_ => Err(format!("Unknown issue type label: {}", label).into()),
-		}
-	}
-}
-
-impl Order for IssueType {
-	fn order(&self) -> u64 {
-		match self {
-			Self::Bug => 0,
-			Self::Tests => 1,
-			Self::Cleanup => 2,
-			Self::Refactor => 3,
-			Self::Feature => 4,
-			Self::Docs => 5,
-			Self::Benchmarking => 6,
-		}
-	}
-}
-
-impl Human for IssueType {
-	fn human(&self) -> String {
-		match self {
-			Self::Bug => "Fix",
-			Self::Tests => "Testing",
-			Self::Cleanup => "Cleanup",
-			Self::Refactor => "Refactor",
-			Self::Feature => "Feature",
-			Self::Docs => "Docs",
-			Self::Benchmarking => "Benchmarking",
-		}
-		.to_string()
-	}
-}
-
-impl Colored for IssueType {
-	fn color(&self) -> &str {
-		""
-	}
-}
-
-pub enum Status {
-	Free,
-	Taken,
-	Wip,
-}
-
-impl Order for Status {
-	fn order(&self) -> u64 {
-		match self {
-			Self::Free => 0,
-			Self::Taken => 1,
-			Self::Wip => 2,
-		}
-	}
-}
-
-impl Human for Status {
-	fn human(&self) -> String {
-		match self {
-			Self::Free => "Free",
-			Self::Taken => "Taken",
-			Self::Wip => "WIP",
-		}
-		.to_string()
-	}
-}
-
-impl Colored for Status {
-	fn color(&self) -> &str {
-		match self {
-			Self::Free => "green",
-			Self::Taken | Self::Wip => "orange",
-		}
-	}
-}
-
-impl<T: Human> Human for Option<T> {
-	fn human(&self) -> String {
-		self.as_ref().map_or("-".into(), |d| d.human())
-	}
-}
-
-pub trait ColoredHuman {
-	fn colored_human(&self) -> String;
-}
-
-impl<T: Colored + Human> ColoredHuman for T {
-	fn colored_human(&self) -> String {
-		format!("<span style=\"color:{}\">{}</span>", self.color(), self.human())
-	}
-}
-
-impl<T: Colored + Human> ColoredHuman for Option<T> {
-	fn colored_human(&self) -> String {
-		self.as_ref().map_or("-".to_string(), |d| d.colored_human())
-	}
-}
-
-impl Difficulty {
-	pub fn try_from_label(label: &str) -> Result<Self> {
-		match label {
-			"D0-easy" => Ok(Self::Easy),
-			"D1-medium" => Ok(Self::Medium),
-			"D2-substantial" => Ok(Self::Difficult),
-			"D3-involved" => Ok(Self::Involved),
-			_ => Err(format!("Unknown difficulty label: {}", label).into()),
-		}
-	}
-}
-
-impl Human for Difficulty {
-	fn human(&self) -> String {
-		match self {
-			Self::Easy => "Trivial",
-			Self::Medium => "Easy",
-			Self::Difficult => "Difficult",
-			Self::Involved => "Hard",
-		}
-		.to_string()
-	}
-}
-
-impl Human for Option<Duration> {
-	fn human(&self) -> String {
-		self.as_ref().map_or("?".into(), |d| {
-			let s = d.as_secs();
-
-			if s < 60 {
-				format!("{}s", s % 60)
-			} else if s < 3600 {
-				format!("{}m", s / 60)
-			} else if s < 86400 {
-				format!("{}h", s / 3600)
-			} else {
-				format!("{}d", s / 86400)
-			}
-		})
-	}
-}
-
+/// Collection of github issues.
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Clone, Default)]
 pub struct Issues {
 	pub issues: BTreeMap<IssueId, Issue>,
+	/// When this was last fetched.
 	pub last_updated: Option<u64>,
 }
-
-type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
 impl Issues {
 	fn now() -> Self {
@@ -334,7 +90,7 @@ impl Issues {
 	}
 
 	pub async fn load() -> Result<Self> {
-		let path = std::path::Path::new("data.json");
+		let path = std::path::Path::new(CACHE_PATH);
 		if path.exists() {
 			log::info!("Loading from cache...");
 
@@ -352,8 +108,9 @@ impl Issues {
 		Self::fetch().await
 	}
 
+	/// Try to load `Self` from a cache filoe.
 	fn try_from_cache() -> Result<Self> {
-		let mut file = std::fs::File::open("data.json")?;
+		let mut file = std::fs::File::open(CACHE_PATH)?;
 		let mut data = Vec::new();
 		file.read_to_end(&mut data)?;
 		serde_json::from_slice(&data).map_err(Into::into)
@@ -366,10 +123,10 @@ impl Issues {
 		s.fetch_issues().await?;
 
 		// Store in a file for faster restarts if it crashed
-		let mut file = std::fs::File::create("data.json")?;
+		let mut file = std::fs::File::create(CACHE_PATH)?;
 		let data = serde_json::to_vec(&s)?;
 		file.write_all(&data)?;
-		log::info!("Data written to data.json");
+		log::info!("Data written to {CACHE_PATH}");
 
 		Ok(s)
 	}
@@ -387,7 +144,7 @@ impl Issues {
 			.list()
 			.labels(&["C1-mentor".into()])
 			.state(octocrab::params::State::Open)
-			.per_page(50)
+			.per_page(100)
 			.send()
 			.await?;
 
