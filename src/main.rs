@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-only
+// SPDX-FileCopyrightText: Oliver Tale-Yazdi <oliver@tasty.limo>
+
 #![allow(dead_code)] // The caching crate produces "unused" functions…
 #![allow(unused_imports)]
 

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-only
+// SPDX-FileCopyrightText: Oliver Tale-Yazdi <oliver@tasty.limo>
+
 use crate::types::*;
 use core::time::Duration;
 use octocrab::models::IssueId;

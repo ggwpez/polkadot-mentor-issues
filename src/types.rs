@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-only
+// SPDX-FileCopyrightText: Oliver Tale-Yazdi <oliver@tasty.limo>
+
 use crate::traits::*;
 
 pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
