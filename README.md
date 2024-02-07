@@ -1,6 +1,6 @@
 # Polkadot Mentor Issue Board
 
-Lists some good issues for people that want to work on the Polkadot SDK.
+Lists some good issues for people that want to work on the Polkadot SDK. The list is updated every 6 hours.
 
 # Deployment
 
