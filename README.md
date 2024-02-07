@@ -6,12 +6,8 @@ Lists some good issues for people that want to work on the Polkadot SDK. The lis
 
 It is a single binary without the need for a static asset directory. Build and start with:  
 ```bash
-# If you need an SSL cert:
-certbot certonly
 cargo install --path .
-# Allow non-sudo binaries to listen on low ports:
-sudo setcap 'cap_net_bind_service=+ep' $(which polkadot-mentor-issues)
-polkadot-mentor-issues --endpoint 0.0.0.0 --port 443 --cert mycert.pem --key mykey.pem
+polkadot-mentor-issues --endpoint 0.0.0.0 --port 8080
 ```
 
 # Columns
@@ -30,7 +26,7 @@ An estimated difficulty as given by the author.
 
 ## Status
 
-Whether this issues is `Free`, `Taken` or `WIP` (= work in progress).
+Whether this issues is `Free` or `Taken`. It currently does not know whether there is a Merge Request attached, since the GitHub API does not easily expose this.
 
 ## Type
 
