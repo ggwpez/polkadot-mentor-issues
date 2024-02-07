@@ -1,3 +1,4 @@
+use crate::types::*;
 use core::time::Duration;
 use octocrab::models::IssueId;
 use serde::{Deserialize, Serialize};
@@ -6,7 +7,6 @@ use std::{
 	io::{Read, Write},
 	time::{Instant, SystemTime, UNIX_EPOCH},
 };
-use crate::types::*;
 
 const CACHE_PATH: &str = "data.json";
 
@@ -47,15 +47,11 @@ impl Issue {
 	}
 
 	pub fn difficulty(&self) -> Option<Difficulty> {
-		self.0.labels.iter().find_map(|label| {
-			label.name.as_str().try_into().ok()
-		})
+		self.0.labels.iter().find_map(|label| label.name.as_str().try_into().ok())
 	}
 
 	pub fn typ(&self) -> Option<IssueType> {
-		self.0.labels.iter().find_map(|label| {
-			label.name.as_str().try_into().ok()
-		})
+		self.0.labels.iter().find_map(|label| label.name.as_str().try_into().ok())
 	}
 
 	pub fn status(&self) -> Option<Status> {
