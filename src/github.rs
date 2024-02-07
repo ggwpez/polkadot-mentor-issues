@@ -58,28 +58,12 @@ impl Issue {
 		let wip = self.0.pull_request.is_some();
 
 		if wip {
-			Some(Status::WIP)
+			Some(Status::Wip)
 		} else if assigned {
 			Some(Status::Taken)
 		} else {
 			Some(Status::Free)
 		}
-	}
-
-	pub fn verified(&self) -> bool {
-		false
-	}
-
-	pub fn github(&self) -> Option<String> {
-		None
-	}
-
-	pub fn github_verified(&self) -> bool {
-		false
-	}
-
-	pub fn address(&self) -> String {
-		"0x".to_string()
 	}
 
 	pub fn difficulty(&self) -> Option<Difficulty> {
@@ -153,7 +137,7 @@ pub trait Sanitize {
 
 impl Sanitize for String {
 	fn sanitize(&self) -> String {
-		self.replace("'", "").replace("`", "").replace("\"", "")
+		self.replace(['\'', '`', '\"'], "")
 	}
 }
 
@@ -214,7 +198,7 @@ impl Order for IssueType {
 impl Human for IssueType {
 	fn human(&self) -> String {
 		match self {
-			Self::Bug => "Bug",
+			Self::Bug => "Fix",
 			Self::Tests => "Testing",
 			Self::Cleanup => "Cleanup",
 			Self::Refactor => "Refactor",
@@ -228,17 +212,14 @@ impl Human for IssueType {
 
 impl Colored for IssueType {
 	fn color(&self) -> &str {
-		match self {
-			Self::Bug => "red",
-			_ => "",
-		}
+		""
 	}
 }
 
 pub enum Status {
 	Free,
 	Taken,
-	WIP,
+	Wip,
 }
 
 impl Order for Status {
@@ -246,7 +227,7 @@ impl Order for Status {
 		match self {
 			Self::Free => 0,
 			Self::Taken => 1,
-			Self::WIP => 2,
+			Self::Wip => 2,
 		}
 	}
 }
@@ -256,7 +237,7 @@ impl Human for Status {
 		match self {
 			Self::Free => "Free",
 			Self::Taken => "Taken",
-			Self::WIP => "WIP",
+			Self::Wip => "WIP",
 		}
 		.to_string()
 	}
@@ -266,7 +247,7 @@ impl Colored for Status {
 	fn color(&self) -> &str {
 		match self {
 			Self::Free => "green",
-			Self::Taken | Self::WIP => "orange",
+			Self::Taken | Self::Wip => "orange",
 		}
 	}
 }
@@ -349,10 +330,7 @@ impl Issues {
 	}
 
 	pub fn since_last_update(&self) -> Option<Duration> {
-		let Some(last_updated) = self.last_updated else { return None };
-		let now = now_s();
-
-		Some(Duration::from_secs(now - last_updated))
+		Some(Duration::from_secs(now_s() - self.last_updated?))
 	}
 
 	pub async fn load() -> Result<Self> {
@@ -363,7 +341,7 @@ impl Issues {
 			match Self::try_from_cache() {
 				Ok(s) => {
 					log::info!("Loaded from cache");
-					return Ok(Self::finalize(s))
+					return Ok(s)
 				},
 				Err(e) => log::warn!("Failed to load from cache. Falling back to fetch: {}", e),
 			}
@@ -381,12 +359,6 @@ impl Issues {
 		serde_json::from_slice(&data).map_err(Into::into)
 	}
 
-	fn finalize(self) -> Self {
-		// todo
-
-		self
-	}
-
 	pub async fn fetch() -> Result<Self> {
 		let mut s = Self::now();
 		log::info!("Fetching data from remote...");
@@ -399,7 +371,7 @@ impl Issues {
 		file.write_all(&data)?;
 		log::info!("Data written to data.json");
 
-		Ok(s.finalize())
+		Ok(s)
 	}
 
 	/// Query each profile description and check if the address is mentioned.
