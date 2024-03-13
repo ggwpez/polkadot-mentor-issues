@@ -50,7 +50,7 @@ impl Issue {
 	}
 
 	pub fn difficulty(&self) -> Option<Difficulty> {
-		self.0.labels.iter().find_map(|label| label.name.as_str().try_into().ok())
+		self.0.labels.iter().filter_map(|label| label.name.as_str().try_into().ok()).min()
 	}
 
 	pub fn typ(&self) -> Option<IssueType> {

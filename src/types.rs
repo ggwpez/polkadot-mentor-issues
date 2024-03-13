@@ -6,6 +6,7 @@ use crate::traits::*;
 pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
 /// How difficult an issue is estimated to be.
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
 pub enum Difficulty {
 	/// Good First Issue
 	GoodFirstIssue,
