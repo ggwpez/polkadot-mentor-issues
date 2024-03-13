@@ -7,6 +7,8 @@ pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
 /// How difficult an issue is estimated to be.
 pub enum Difficulty {
+	/// Good First Issue
+	GoodFirstIssue,
 	Easy,
 	Medium,
 	Difficult,
@@ -18,6 +20,7 @@ impl TryFrom<&str> for Difficulty {
 
 	fn try_from(label: &str) -> Result<Self> {
 		match label {
+			"C2-good-first-issue" => Ok(Self::GoodFirstIssue),
 			"D0-easy" => Ok(Self::Easy),
 			"D1-medium" => Ok(Self::Medium),
 			"D2-substantial" => Ok(Self::Difficult),
@@ -30,6 +33,7 @@ impl TryFrom<&str> for Difficulty {
 impl Human for Difficulty {
 	fn human(&self) -> String {
 		match self {
+			Self::GoodFirstIssue => "Good First Issue",
 			Self::Easy => "Trivial",
 			Self::Medium => "Easy",
 			Self::Difficult => "Difficult",
@@ -42,10 +46,11 @@ impl Human for Difficulty {
 impl Order for Difficulty {
 	fn order(&self) -> u64 {
 		match self {
-			Self::Easy => 0,
-			Self::Medium => 1,
-			Self::Difficult => 2,
-			Self::Involved => 3,
+			Self::GoodFirstIssue => 0,
+			Self::Easy => 1,
+			Self::Medium => 2,
+			Self::Difficult => 3,
+			Self::Involved => 4,
 		}
 	}
 }
@@ -53,6 +58,7 @@ impl Order for Difficulty {
 impl Colored for Difficulty {
 	fn color(&self) -> &str {
 		match self {
+			Self::GoodFirstIssue => "green",
 			Self::Easy => "green",
 			Self::Medium => "orange",
 			Self::Difficult => "yellow",
