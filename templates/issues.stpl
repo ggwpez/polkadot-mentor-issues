@@ -16,7 +16,7 @@
     <div class="row justify-content-end p-2">
       <div class="col-4 d-flex justify-content-start" style="padding-left: 0px; padding-top: 0.6em; padding-bottom: 0.6em;">
         <!-- Last updated -->
-        Updated <%= issues.since_last_update().human() %> ago
+        Updated <%= self.issues.since_last_update().human() %> ago
       </div>
 
       <div class="col-4 d-flex justify-content-center" style="padding-top: 0.6em; padding-bottom: 0.6em;">
@@ -37,7 +37,7 @@
   <table id="myTable" class="display nowrap" style="width:100%" width="100%">
     <thead>
       <tr>
-        <th>Title (<%= issues.issues.len() %>)</th>
+        <th>Title (<%= self.issues.issues.len() %>)</th>
         <th>Estimate</th>
         <th>Status</th>
         <th>Type</th>
@@ -45,7 +45,7 @@
       </tr>
     </thead>
     <tbody>
-    <% for issue in issues.issues.values() { %>
+    <% for issue in self.issues.issues.values() { %>
       <tr>
         <!-- TITLE -->
         <td data-order='<%- issue.title().remove_non_alphanum() %>'>

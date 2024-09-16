@@ -50,7 +50,11 @@ impl Issue {
 	}
 
 	pub fn difficulty(&self) -> Option<Difficulty> {
-		self.0.labels.iter().filter_map(|label| label.name.as_str().try_into().ok()).min()
+		self.0
+			.labels
+			.iter()
+			.filter_map(|label| label.name.as_str().try_into().ok())
+			.min()
 	}
 
 	pub fn typ(&self) -> Option<IssueType> {
@@ -136,7 +140,7 @@ impl Issues {
 		let mut interval = tokio::time::interval(Duration::from_millis(2000));
 
 		interval.tick().await;
-		let octocrab = octocrab::instance();
+		let octocrab = Self::setup();
 
 		let mut page = octocrab
 			.issues("paritytech", "polkadot-sdk")
@@ -161,6 +165,17 @@ impl Issues {
 		}
 
 		Ok(())
+	}
+
+	fn setup() -> octocrab::Octocrab {
+		let mut builder = octocrab::Octocrab::builder();
+		if let Ok(token) = std::env::var("GITHUB_TOKEN") {
+			log::info!("Using GITHUB_TOKEN for authentication");
+			builder = builder.personal_token(token);
+		} else {
+			log::warn!("No GITHUB_TOKEN found. Falling back to unauthenticated requests");
+		}
+		builder.build().expect("Failed to build octocrab")
 	}
 }
 
